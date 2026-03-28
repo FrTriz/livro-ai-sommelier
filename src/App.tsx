@@ -8,6 +8,7 @@ import { Discover } from './views/Discover'
 import { Discussion } from './views/Discussion'
 import { Bookshelf } from './views/Bookshelf'
 import { Profile } from './views/Profile'
+import { BookDetails } from './views/BookDetails'
 
 function App() {
   const [activeTab, setActiveTab] = React.useState<TabKey>('home')
@@ -48,7 +49,10 @@ function App() {
       </AnimatePresence>
 
       {!showOnboarding && (
-        <BottomNav activeTab={activeTab} onChange={setActiveTab} />
+        <>
+          <BottomNav activeTab={activeTab} onChange={setActiveTab} />
+          <BookDetails />
+        </>
       )}
     </div>
   )

@@ -318,5 +318,98 @@ export const booksDB: Book[] = [
       'Diante de suas tragédias como em "Tudo vale a pena se a alma não é pequena", em qual aspecto o medo do sacrifício vulgar têm atrofiado os ímpetos de sua alma nas incertezas dos mares?',
       'Qual seria hoje seu ideal mítico grandioso escondido de "Quinto Império" além das fronteiras estagnadas da vida prática, pronto para transcender o mero desinteresse letárgico atual?'
     ]
+  },
+  {
+    id: '19',
+    title: 'O Pequeno Príncipe',
+    author: 'Antoine de Saint-Exupéry',
+    isbn: '9788522031121',
+    tags_emocionais: ['Curtos (<200p)', 'calma', 'esperança', 'Clássicos'],
+    resumos: {
+      quick: 'Uma história poética e filosófica sobre a inocência da infância e a sabedoria que se perde com a idade adulta.',
+      medium: 'Um piloto perdido no deserto encontra um príncipe que veio de um asteroide. Através de histórias de sua jornada planetária, ele revela verdades profundas sobre a essência das coisas invisíveis aos olhos.',
+      deep: 'Uma crítica sutil à futilidade das prioridades adultas. O autor explora magistralmente o apego, a responsabilidade ("tu te tornas eternamente responsável por aquilo que cativas") e o luto da pureza da infância esmagada pelas métricas quantitativas burguesas.'
+    },
+    deep_questions: [
+      'Quais "números" ou "métricas" da vida adulta te cegaram recentemente para a essência real de alguma relação ou coisa da sua vida?',
+      'O que você andou domesticando de forma leviana sem aceitar a responsabilidade eterna por esse laço criado?'
+    ]
+  },
+  {
+    id: '20',
+    title: 'Hábitos Atômicos',
+    author: 'James Clear',
+    isbn: '9788550807564',
+    tags_emocionais: ['Autoajuda', 'foco', 'produtividade'],
+    resumos: {
+      quick: 'A ciência comprovada de que grandes resultados vêm de pequenas, constantes e incrementais mudanças de rotina, e não de revoluções abruptas.',
+      medium: 'O livro constrói e desconstrói o design dos hábitos através dos gatilhos, desejos, respostas e recompensas. Mostra como adaptar o ambiente é infinitamente superior do que depender de mera motivação passional.',
+      deep: 'Hábitos não sobre atingir um objetivo exterior pontual, mas sobre alterar identidades internas absolutas. O fracasso sistêmico das resoluções falham pois atacam os sintomas do sistema, não as entranhas profundas do modelo de quem você fundamentalmente decidiu ser hoje.'
+    },
+    deep_questions: [
+      'Em que meta atual você está apenas focando nos sintomas (objetivos) ao invés de aceitar as dores de ter que curar a sua essência e identidade interna de comportamento?',
+      'Qual atrito no seu ambiente imediato destrói silenciosamente os seus minúsculos passos na jornada, que você tolera ao invés de erradicar?'
+    ]
+  },
+  {
+    id: '21',
+    title: 'Harry Potter e a Pedra Filosofal',
+    author: 'J.K. Rowling',
+    isbn: '9788532530783',
+    tags_emocionais: ['Fantasia', 'Ficção', 'jornada'],
+    resumos: {
+      quick: 'Um garoto órfão negligenciado descobre ser um bruxo famoso em um mundo secreto mágico além da fronteira ordinária.',
+      medium: 'Ao se afastar do abuso de seus tios, o Harry entra em uma escola majestosa mágica onde entende as tragédias do passado da sua família, mas também descobre que as escolhas moldam as hierarquias mais poderosas de afinidade e coragem.',
+      deep: 'Na verdade foca em superar a morte num espetáculo dicotomicamente infantil. O arquivilão persegue uma pedra de juventude pela sua aversão intolerante as debilidades biológicas e finitude. Aceitar a mortalidade ou não se torna todo o eixo definidor das trevas ao invés da luz redentora e abnegante.'
+    },
+    deep_questions: [
+      'Até onde você foge do medo do fracasso buscando uma "pedra filosofal" do acúmulo infinito, em vez de assumir sacrifícios orgânicos e inevitáveis da vulnerabilidade?'
+    ]
+  },
+  {
+    id: '22',
+    title: 'As Crônicas de Nárnia: O Leão, a Feiticeira e o Guarda-Roupa',
+    author: 'C.S. Lewis',
+    isbn: '9788578270698',
+    tags_emocionais: ['Fantasia', 'Ficção', 'esperança', 'Clássicos'],
+    resumos: {
+      quick: 'Aventuras de quatro irmãos num gelado mundo secreto opressor escondido pelas casacas de um guarda-roupa.',
+      medium: 'Fugindo do desespero cru da Segunda Guerra, encontram em Nárnia o desespero fantástico. Traz o sacrifício supremo em forma lúdica (pelo Grande Leão) sobre as injustiças egocêntricas e as redenções profundas nos erros por omissão de uma criança tentada com o que há de mais fútil no reino material.',
+      deep: 'Mais do que metáforas teológicas brutas, Lewis espelha a nossa vulnerabilidade total no garoto Edmundo pela fraqueza por doce-turco, validando a estupidez com a qual homens destroem reinos morais de quem o cerca inteiramente por vaidade narcisista mínima de momento e o alto imposto punitivo disto a pessoas plenas e virtuosas no sacrifício por conta desse deslize.'
+    },
+    deep_questions: [
+      'Por qual fútil benefício de recompensa imediata, como um doce momentâneo, você acaba alienando ou submetendo aqueles de laço fiel a perigos morais e desgastes destrutivos imensos nas suas relações?',
+      'Quando o inverno constante na sua vida (mas sem o alívio do Natal) rege os dias solitários, que esperança "Leonina" que exige quebra de orgulho te redimiria?'
+    ]
+  },
+  {
+    id: '23',
+    title: 'É Assim que Acaba',
+    author: 'Colleen Hoover',
+    isbn: '9788501112514',
+    tags_emocionais: ['Romance', 'Ficção', 'superação', 'tristeza'],
+    resumos: {
+      quick: 'Um dilema devastador que acompanha a jovem Lily desconstruindo sua visão embaçada por paixões turbulentas na fronteira frágil da proteção ao assédio familiar que prometera nunca vivenciar.',
+      medium: 'Acompanhamos a paixonite e estabilidade vertiginosa em um relacionamento maduro que gradualmente assume as vestimentas horríveis do ciclo do parceiro doente. Mostra as dores lancinantes de entender a natureza do abuso doméstico envernizado pelo cuidado aparente.',
+      deep: 'Não versa romantizações nocivas e sombrias mas exige encarar a amargura devastadora que a interrupção da violência de gerações herdeiras tem que quebrar contra nossos próprios vínculos afetivos para cessar o envenenamento na raiz a qualquer custo por sobrevivência fundamental aos que ainda dependem do seu caráter íntegro num rompimento definitivo.'
+    },
+    deep_questions: [
+      'Existem padrões destrutivos contagiantes das vivências anteriores em que você afunda numa inércia cega perante novas oportunidades e promessas puras por comodismo tóxico?'
+    ]
+  },
+  {
+    id: '24',
+    title: 'O Diário de Anne Frank',
+    author: 'Anne Frank',
+    isbn: '9788501069504',
+    tags_emocionais: ['Clássicos', 'melancolia', 'esperança', 'perspectiva'],
+    resumos: {
+      quick: 'As confissões íntimas e corajosas de uma adolescente judia no cárcere secreto para fugir do holocausto avassalador exterior.',
+      medium: 'Escondida num anexo sombrio por dois anos na tragédia desumanizadora; lidamos de frente com transformações, hormônios e as disputas acaloradas enclausuradas entre adultos de forma puramente não romântica somadas a sombra apavorante existencial onipresente do extermínio nazista no exterior.',
+      deep: 'Um poderoso manifesto contundente que atesta as imensas complexidades triviais fúteis sendo sobrepostas perante tragédias catastróficas, onde nisto reluz brilhantemente o brilho teimosamente inextinguível por meio da escrita numa alma puríssima a suportar toda dor absurda de horrores absolutos onde apenas de fato restou nela atritar o tédio cotidiano com a crença profunda bondade dos homens, num clímax interrompido sem aviso pelas brutalidades letais absolutas extintoras das palavras deixadas soltas nas entranhas da história dolorosa sem fechamentos ou despedidas na luz das suas convicções morais intactas destruídas.'
+    },
+    deep_questions: [
+      'No limite amedrontador onde você perdou integral controle protetor das violências despropositadas colossais exteriores alheias ao seu cerco na injustiça perversa do mundo à beira precipício obscuro: o otimismo íntimo interno no refúgio e bondade resistiria aos terrores fúteis da convivência esmagadora?'
+    ]
   }
 ];

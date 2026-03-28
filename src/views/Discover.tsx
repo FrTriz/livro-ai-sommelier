@@ -1,176 +1,170 @@
-import * as React from 'react'
-import { Card, CardTitle, CardDescription } from '../components/ui/Card'
-import { Badge } from '../components/ui/Badge'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Search, Compass, Sparkles, BookOpen } from 'lucide-react'
-import { BookCover } from '../components/ui/BookCover'
-import { booksDB } from '../data/mockDB'
-import type { Book } from '../data/mockDB'
-import { motion } from 'framer-motion'
+import { useState } from 'react';
+import { Sparkles, Filter, Search, Loader2 } from 'lucide-react';
+import { useStore } from '../lib/store';
+import { BookCard } from '../components/BookCard';
+import { booksDB } from '../data/mockDB';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Mapa reverso para "curar" dores emocionais do usuário fornecendo virtudes de livros opostas
-const moodMap: Record<string, string[]> = {
-  ansioso: ['calma', 'foco', 'aceitação', 'resiliência'],
-  ansiedade: ['calma', 'foco', 'aceitação', 'resiliência'],
-  triste: ['esperança', 'superação', 'motivação'],
-  tristeza: ['esperança', 'superação', 'motivação'],
-  perdido: ['jornada', 'clareza', 'perspectiva'],
-  desespero: ['resiliência', 'coragem', 'força'],
-  cansado: ['calma', 'aceitação', 'beleza'],
-  raiva: ['perspectiva', 'paciência', 'reflexão']
-}
+const FILTERS = ['Fantasia', 'Autoajuda', 'Curtos (<200p)', 'Esperançoso', 'Clássicos', 'Ficção'];
 
 export function Discover() {
-  const [query, setQuery] = React.useState('')
-  const [results, setResults] = React.useState<(Book & { match: number, reason: string })[]>([])
-  const [isSearching, setIsSearching] = React.useState(false)
+  const { books, addBook } = useStore();
+  const discoverBooks = books.filter(b => b.status === 'discover');
+  
+  const [query, setQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const handleSearch = (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!query) return;
+  const colors = ['bg-indigo-900', 'bg-rose-800', 'bg-emerald-800', 'bg-cyan-800', 'bg-amber-700', 'bg-purple-900', 'bg-slate-800'];
+
+  const handleSearch = () => {
+    if (!query.trim() && !activeFilter) return;
     
-    setIsSearching(true)
+    setIsSearching(true);
     
     setTimeout(() => {
-      const lowerQuery = query.toLowerCase()
+      // Find 2 books that aren't already in the store
+      const available = booksDB.filter(b => !books.some(storeBook => storeBook.id === b.id));
       
-      // Checar se a query atinge algum Mood mapeado (ex: "ansioso")
-      let activeTargetTags: string[] = []
-      Object.keys(moodMap).forEach(key => {
-        if (lowerQuery.includes(key)) {
-          activeTargetTags = [...activeTargetTags, ...moodMap[key]]
-        }
-      })
+      let filtered = available;
+      if (activeFilter) {
+        filtered = filtered.filter(b => b.tags_emocionais.includes(activeFilter));
+      }
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        filtered = filtered.filter(b => 
+          b.title.toLowerCase().includes(q) || 
+          b.author.toLowerCase().includes(q) || 
+          b.tags_emocionais.some(t => t.toLowerCase().includes(q)) ||
+          b.resumos.quick.toLowerCase().includes(q)
+        );
+      }
+      
+      // If nothing matches, fallback to random from available to avoid empty state ruining the "sommelier" experience
+      if (filtered.length === 0) {
+        filtered = available;
+      }
+      
+      const shuffled = filtered.sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, 2);
+      
+      selected.forEach(sb => {
+        addBook({
+          id: sb.id,
+          title: sb.title,
+          author: sb.author,
+          coverColor: colors[Math.floor(Math.random() * colors.length)],
+          coverUrl: `https://covers.openlibrary.org/b/isbn/${sb.isbn}-L.jpg`,
+          progress: 0,
+          status: 'discover',
+          notes: [],
+          tags: sb.tags_emocionais,
+          pages: Math.floor(Math.random() * 400) + 150,
+          pagesRead: 0,
+          reasonForYou: sb.resumos.medium,
+          matchPercentage: Math.floor(Math.random() * 10) + 90, // 90-99%
+        });
+      });
+      
+      setIsSearching(false);
+      setQuery('');
+    }, 1500);
+  };
 
-      const scoredBooks = booksDB.map(book => {
-        let score = 0;
-        let reasons: string[] = [];
-        
-        // Avalia match cruzado com o MoodMap
-        if (activeTargetTags.length > 0) {
-          book.tags_emocionais.forEach(tag => {
-             if (activeTargetTags.includes(tag.toLowerCase())) {
-                score += 40;
-                reasons.push(`oferece ${tag.toLowerCase()}`);
-             }
-          })
-        }
-
-        // Avalia match direto (caso o usuário digite "foco" e o livro tenha "foco")
-        book.tags_emocionais.forEach(tag => {
-          if (lowerQuery.includes(tag.toLowerCase())) {
-             score += 35;
-             if(!reasons.includes(`foca em ${tag.toLowerCase()}`)) reasons.push(`foca em ${tag.toLowerCase()}`);
-          }
-        })
-        
-        // Avalia titulo e autor
-        if(lowerQuery.includes(book.author.toLowerCase())) score += 30;
-        if(book.title.toLowerCase().includes(lowerQuery)) score += 50;
-
-        // Análise simples na sinopse 
-        if (book.resumos.quick.toLowerCase().includes(lowerQuery)) score += 15;
-
-        let finalScore = score > 100 ? 98 : score;
-        if (score === 0) finalScore = Math.floor(Math.random() * 20) + 15;
-        
-        let reasonStr = "Combina com a energia geral do seu momento."
-        if (reasons.length > 0) {
-           reasonStr = `Ideal para você agora pois ${reasons.slice(0,2).join(' e ')}.`
-        }
-
-        return { ...book, match: finalScore, reason: reasonStr }
-      }).sort((a,b) => b.match - a.match)
-
-      // Exclui lixo muito baixo ou trunca
-      setResults(scoredBooks.filter(s => s.match > 20).slice(0, 3) || scoredBooks.slice(0,1))
-      setIsSearching(false)
-    }, 900)
-  }
 
   return (
-    <div className="p-4 flex flex-col gap-6 min-h-[calc(100vh-80px)]">
-      <header className="pt-4">
-        <h1 className="text-3xl font-serif text-slate-900">Descobrir</h1>
-        <p className="text-slate-500 font-sans mt-1">Converse comigo. Como posso ajudá-lo hoje?</p>
-      </header>
+    <div className="flex flex-col h-full bg-slate-50/50">
+      {/* Top Header & Search Area */}
+      <div className="bg-primary px-6 pt-16 pb-12 rounded-b-[2.5rem] shadow-md relative overflow-hidden">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/30 rounded-full blur-xl -translate-x-1/4 translate-y-1/2" />
 
-      <div className="relative">
-        <form onSubmit={handleSearch}>
-          <div className="relative flex items-center shadow-sm rounded-xl overflow-hidden shadow-primary/5">
-            <div className="absolute left-3 text-slate-400">
-               <Compass className="w-5 h-5" />
-            </div>
-            <Input 
-              className="pl-10 pr-12 h-14 bg-white border-slate-200 text-base"
-              placeholder="Ex: Estou ansioso com o futuro..." 
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-            <Button 
-              type="submit" 
-              variant="default" 
-              size="icon" 
-              className="absolute right-1 rounded-lg h-12 w-12"
-              disabled={isSearching}
-            >
-              <Search className="w-5 h-5" />
-            </Button>
+        <div className="relative z-10 flex flex-col gap-6">
+          <div>
+            <h1 className="text-3xl font-serif font-bold text-white mb-2">Descoberta</h1>
+            <p className="text-blue-100 text-sm">Qual momento da vida você está vivendo?</p>
           </div>
-        </form>
+
+          {/* Conversational Search */}
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Sparkles size={20} className="text-primary" />
+            </div>
+            <input 
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Ex: Quero algo esperançoso após um término..."
+              className="w-full bg-white text-slate-900 rounded-2xl py-4 pl-12 pr-12 shadow-xl focus:outline-none focus:ring-2 focus:ring-secondary/50 placeholder:text-slate-400 font-medium"
+            />
+            <button 
+              onClick={handleSearch}
+              className="absolute inset-y-2 right-2 px-3 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center"
+            >
+              <Search size={18} />
+            </button>
+          </div>
+
+          {/* Filters (Pills) */}
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar snap-x">
+            <button className="shrink-0 snap-start bg-white/20 p-2 rounded-full text-white backdrop-blur-sm border border-white/10">
+              <Filter size={16} />
+            </button>
+            {FILTERS.map(filter => (
+              <button 
+                key={filter}
+                onClick={() => setActiveFilter(activeFilter === filter ? null : filter)}
+                className={`shrink-0 snap-start px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-sm border ${
+                  activeFilter === filter 
+                    ? 'bg-white text-primary border-white' 
+                    : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 space-y-4">
-         {isSearching ? (
-           <div className="flex justify-center items-center h-40">
-             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-             <span className="ml-3 text-sm text-slate-500 font-serif">Interpretando conexões semânticas...</span>
-           </div>
-         ) : results.length > 0 ? (
-           results.map((book, i) => (
-             <motion.div 
-               key={book.id} 
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: i * 0.1 }}
-             >
-               <Card className="overflow-hidden border-slate-200 shadow-sm relative pr-2">
-                 <div className="absolute -top-2 -right-2 bg-accent/10 border-accent/20 border pt-3 pb-1 pl-3 pr-2 rounded-bl-3xl rounded-tr-xl flex flex-col items-center justify-center">
-                    <span className="text-accent font-bold text-sm">{book.match}%</span>
-                    <span className="text-[9px] uppercase font-bold text-accent/70 tracking-wider">Match</span>
-                 </div>
-
-                 <div className="flex p-4 pb-2">
-                   <BookCover title={book.title} isbn={book.isbn} size="S" className="w-16 h-24 mr-4" />
-                   <div className="flex-1 pt-1">
-                     <CardTitle className="text-lg leading-tight mb-1">{book.title}</CardTitle>
-                     <CardDescription className="text-xs mb-2">{book.author}</CardDescription>
-                     <div className="flex flex-wrap gap-1 mb-2">
-                       {book.tags_emocionais.map(m => (
-                         <Badge key={m} variant="outline" className="text-[10px] py-0 bg-slate-50">{m}</Badge>
-                       ))}
-                     </div>
-                   </div>
-                 </div>
-                 <div className="bg-indigo-50/50 px-4 py-3 border-t border-indigo-50 flex items-start">
-                   <Sparkles className="w-4 h-4 text-primary shrink-0 mr-2 mt-0.5" />
-                   <div>
-                     <span className="text-xs font-semibold text-primary block mb-1">Por que ler agora?</span>
-                     <p className="text-xs text-slate-600 leading-relaxed capitalize-first">{book.reason}</p>
-                   </div>
-                 </div>
-               </Card>
-             </motion.div>
-           ))
-         ) : (
-           <div className="flex flex-col items-center justify-center h-48 text-center px-4 mt-8">
-             <BookOpen className="w-12 h-12 text-slate-200 mb-2" />
-             <p className="text-slate-400 font-serif text-lg">A vasta biblioteca aguarda.</p>
-             <p className="text-slate-400 font-sans text-sm mt-1">Descreva seu momento atual e eu traduzirei na literatura perfeita.</p>
-           </div>
-         )}
+      {/* Suggested Results */}
+      <div className="flex-1 overflow-y-auto p-6 pb-24 relative">
+        <h2 className="text-xl font-serif font-bold text-slate-800 mb-6 flex items-center gap-2">
+          Seleção do Sommelier
+        </h2>
+        
+        {isSearching ? (
+          <div className="absolute inset-0 z-20 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-20">
+             <Loader2 size={32} className="text-primary animate-spin mb-4" />
+             <p className="font-serif font-semibold text-slate-600 animate-pulse">Lendo as entrelinhas da sua alma...</p>
+             <p className="text-sm text-slate-500 mt-2">Buscando na biblioteca cósmica</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            <AnimatePresence>
+              {discoverBooks.map(book => (
+                <motion.div
+                  key={book.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  layout
+                >
+                  <BookCard book={book} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+        
+        <div className="mt-8 text-center text-slate-400 text-sm">
+          <p>Quer mais opções?</p>
+          <button className="text-secondary font-semibold hover:underline mt-1">
+            Refinar sua busca
+          </button>
+        </div>
       </div>
     </div>
-  )
+  );
 }

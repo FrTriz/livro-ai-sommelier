@@ -1,131 +1,132 @@
-import * as React from 'react'
-import { Card, CardTitle, CardDescription } from '../components/ui/Card'
-import { Badge } from '../components/ui/Badge'
-import { BookCover } from '../components/ui/BookCover'
-import { BookMarked, Layers } from 'lucide-react'
-import { booksDB } from '../data/mockDB'
-import type { Book } from '../data/mockDB'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen, Flame, Library, Star } from 'lucide-react';
+import { useStore } from '../lib/store';
+
+
+type Tab = 'reading' | 'read' | 'wantToRead';
 
 export function Bookshelf() {
-  const [activeTab, setActiveTab] = React.useState<'Lendo' | 'Lidos' | 'Quero Ler'>('Lidos')
+  const { books, stats, setSelectedBookId } = useStore();
+  const [activeTab, setActiveTab] = useState<Tab>('reading');
 
-  // Mocking separation
-  const lendo = booksDB.filter(b => b.id === '3') // Duna
-  const lidos = booksDB.filter(b => ['1', '2', '4', '5'].includes(b.id)) 
-  const queroLer = booksDB.filter(b => ['6', '7'].includes(b.id))
-
-  const currentBooks = activeTab === 'Lendo' ? lendo : activeTab === 'Lidos' ? lidos : queroLer;
+  const filteredBooks = books.filter(b => b.status === activeTab);
 
   return (
-    <div className="p-4 flex flex-col gap-6 min-h-[calc(100vh-80px)]">
-      <header className="pt-4">
-        <h1 className="text-3xl font-serif text-slate-900 mb-1">Minha Estante</h1>
-        <p className="text-slate-500 font-sans mt-1 text-sm">Seu acervo consolidado e retido.</p>
-      </header>
+    <div className="flex flex-col h-full bg-slate-50/50">
+      <div className="bg-white px-6 pt-16 pb-6 rounded-b-[2rem] shadow-sm flex flex-col gap-6 relative z-10 border-b border-slate-200">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-slate-900">Minha Estante</h1>
+          <p className="text-slate-500 text-sm mt-1 flex gap-4">
+            <span><Flame size={14} className="inline text-orange-500 mb-0.5" /> {stats.streak} dias de fogo</span>
+            <span><BookOpen size={14} className="inline text-blue-500 mb-0.5" /> {stats.booksReadThisYear} lidos esse ano</span>
+          </p>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-full shadow-inner mb-2">
-        {['Lendo', 'Lidos', 'Quero Ler'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
-              activeTab === tab 
-                ? 'bg-white text-primary shadow-sm ring-1 ring-slate-900/5' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+        {/* Top Tabs */}
+        <div className="flex gap-2">
+          {[
+            { id: 'reading', label: 'Lendo' },
+            { id: 'read', label: 'Lidos' },
+            { id: 'wantToRead', label: 'Quero Ler' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as Tab)}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeTab === tab.id 
+                  ? 'bg-primary text-white shadow-md' 
+                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex-1 space-y-4">
-         <AnimatePresence mode="popLayout">
-            {currentBooks.map((book) => (
+      <div className="flex-1 overflow-y-auto p-4 pb-24 flex flex-col gap-4">
+        {filteredBooks.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center mt-10">
+            <Library size={48} className="mb-4 opacity-50" />
+            <h3 className="text-lg font-serif">Sua estante está vazia</h3>
+            <p className="text-sm mt-2">Vá para 'Descobrir' para encontrar sua próxima grande aventura.</p>
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {filteredBooks.map((book) => (
               <motion.div
-                 key={book.id}
-                 initial={{ opacity: 0, scale: 0.95 }}
-                 animate={{ opacity: 1, scale: 1 }}
-                 exit={{ opacity: 0, scale: 0.95 }}
-                 transition={{ duration: 0.2 }}
+                key={book.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={() => setSelectedBookId(book.id)}
+                className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex gap-4 cursor-pointer hover:shadow-md transition-shadow"
               >
-                  {activeTab === 'Lidos' ? (
-                     <ReadBookCard book={book} />
-                  ) : (
-                    <Card className="flex border-slate-200 overflow-hidden shadow-sm pt-0 pb-0">
-                      <BookCover title={book.title} isbn={book.isbn} size="S" className="w-20 border-r-0 rounded-none shadow-none" />
-                      <div className="p-4 flex flex-col justify-center flex-1">
-                        <CardTitle className="text-lg mb-1 leading-tight">{book.title}</CardTitle>
-                        <CardDescription>{book.author}</CardDescription>
+                {/* Capa */}
+                <div className={`w-20 h-32 rounded flex flex-col items-center justify-center text-white shrink-0 shadow-inner relative overflow-hidden ${book.coverColor}`}>
+                   {book.coverUrl ? (
+                     <img src={book.coverUrl} alt={`Capa ${book.title}`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                   ) : (
+                     <>
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                       <span className="font-serif text-xs text-center z-10 font-bold px-1">{book.title}</span>
+                     </>
+                   )}
+                </div>
+
+                {/* Detalhes */}
+                <div className="flex flex-col flex-1 py-1">
+                  <h4 className="font-serif font-bold text-slate-800 text-lg leading-tight truncate">
+                    {book.title}
+                  </h4>
+                  <p className="text-sm text-slate-500 mt-1">{book.author}</p>
+                  
+                  {activeTab === 'reading' && (
+                    <div className="mt-auto">
+                      <div className="flex justify-between text-xs font-semibold text-primary mb-1">
+                        <span>{Math.round((book.pagesRead / book.pages) * 100)}% lido</span>
+                        <span>{book.pagesRead} de {book.pages}</span>
                       </div>
-                    </Card>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-primary h-1.5 rounded-full"
+                          style={{ width: `${(book.pagesRead / book.pages) * 100}%` }}
+                        />
+                      </div>
+                    </div>
                   )}
+
+                  {activeTab === 'read' && (
+                    <div className="mt-auto flex flex-col gap-2 relative">
+                      {book.rating && (
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} size={14} fill={i < (book.rating || 0) ? 'currentColor' : 'none'} />
+                          ))}
+                        </div>
+                      )}
+                      {book.notes && book.notes.length > 0 && (
+                        <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2">
+                          "{book.notes[0]}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'wantToRead' && (
+                    <div className="mt-auto flex items-center gap-2">
+                      <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{book.pages} páginas</span>
+                      <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md">{book.tags[0]}</span>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ))}
-         </AnimatePresence>
+          </AnimatePresence>
+        )}
       </div>
     </div>
-  )
-}
-
-function ReadBookCard({ book }: { book: Book }) {
-  const [level, setLevel] = React.useState<'quick'|'medium'|'deep'|null>(null)
-
-  return (
-     <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex p-4 pb-3">
-          <BookCover title={book.title} isbn={book.isbn} size="M" className="w-16 h-24 mr-4 shadow-sm" />
-          <div className="flex-1 flex flex-col justify-between">
-            <div>
-              <CardTitle className="text-lg leading-tight mb-0.5 line-clamp-2">{book.title}</CardTitle>
-              <CardDescription className="text-sm line-clamp-1">{book.author}</CardDescription>
-            </div>
-            <div className="flex gap-2">
-               <Badge className="bg-emerald-50 text-emerald-700 border-none font-sans text-[10px] uppercase pl-1.5 h-5">
-                 <BookMarked size={12} className="mr-1 inline-block" /> Retido
-               </Badge>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-50 p-4 border-t border-slate-100">
-           <div className="flex items-center gap-2 mb-3">
-             <Layers className="w-4 h-4 text-slate-400" />
-             <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Expandir Conhecimento</span>
-           </div>
-           
-           <div className="flex w-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-             {['quick', 'medium', 'deep'].map(lvl => (
-               <button 
-                 key={lvl}
-                 onClick={() => setLevel(level === lvl ? null : lvl as any)}
-                 className={`flex-1 py-1.5 text-xs font-bold transition-colors border-r last:border-0 border-slate-100 ${
-                   level === lvl ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-50'
-                 }`}
-               >
-                 {lvl === 'quick' ? '1 MIN' : lvl === 'medium' ? '5 MIN' : '15 MIN'}
-               </button>
-             ))}
-           </div>
-
-           <AnimatePresence>
-             {level && (
-               <motion.div 
-                 initial={{ height: 0, opacity: 0 }}
-                 animate={{ height: 'auto', opacity: 1 }}
-                 exit={{ height: 0, opacity: 0 }}
-                 className="overflow-hidden mt-3"
-               >
-                 <div className="bg-white border text-[13px] leading-relaxed text-slate-700 font-serif border-slate-200 rounded-lg p-3 pt-4 shadow-sm relative">
-                   <div className="absolute top-0 left-4 w-8 h-1 bg-primary rounded-b-md" />
-                   <p>{book.resumos[level]}</p>
-                 </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-        </div>
-     </Card>
-  )
+  );
 }

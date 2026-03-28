@@ -1,108 +1,97 @@
-import * as React from 'react'
-import { Card, CardContent, CardTitle, CardDescription } from '../components/ui/Card'
-import { Progress } from '../components/ui/Progress'
-import { Badge } from '../components/ui/Badge'
-import { Sparkles, BookOpen } from 'lucide-react'
-import { booksDB } from '../data/mockDB'
-import { BookCover } from '../components/ui/BookCover'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Brain, Flame, ArrowRight, MessageCircle } from 'lucide-react';
+import { useStore } from '../lib/store';
+import { BookProgressCard } from '../components/BookProgressCard';
+import { BookCard } from '../components/BookCard';
+import { SpacedRepetitionModal } from '../components/SpacedRepetitionModal';
 
 export function Home() {
-  const [insight, setInsight] = React.useState<{ text: string; date: string, book?: string } | null>(null)
+  const { books, stats } = useStore();
+  const [showSpacedRep, setShowSpacedRep] = useState(false);
 
-  React.useEffect(() => {
-    try {
-      const listStr = localStorage.getItem('@livroai:insights:list')
-      if (listStr) {
-        const list = JSON.parse(listStr)
-        if (list.length > 0) {
-          setInsight(list[0]) // Get the most recent
-        }
-      }
-    } catch {}
-  }, [])
-
-  // Mocking current reading
-  const currentRead = booksDB.find(b => b.id === '3') // Duna
-  const pagesReadDaily = 15;
-  const pagesGoalDaily = 30;
-  const dailyProgress = Math.min((pagesReadDaily / pagesGoalDaily) * 100, 100);
-  
-  const bookProgress = 65; 
+  const currentBook = books.find(b => b.status === 'reading');
+  const suggestedBook = books.find(b => b.status === 'discover');
 
   return (
-    <div className="p-4 flex flex-col gap-6">
-      <header className="pt-4 pb-2">
-        <h1 className="text-3xl font-serif text-slate-900">O Ninho de Leitura</h1>
-        <p className="text-slate-500 font-sans mt-1">Bem-vindo ao seu santuário diário.</p>
+    <div className="flex flex-col gap-8 p-6 pb-24 h-full overflow-y-auto w-full">
+      <AnimatePresence>
+        {showSpacedRep && <SpacedRepetitionModal onClose={() => setShowSpacedRep(false)} />}
+      </AnimatePresence>
+
+      {/* Header & Streak */}
+      <header className="flex justify-between items-end mt-4">
+        <div>
+          <p className="text-slate-500 font-medium">Boa tarde,</p>
+          <h1 className="text-3xl font-bold font-serif text-slate-800">Leitor</h1>
+        </div>
+        <div className="flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1.5 rounded-full border border-orange-100 shadow-sm">
+          <Flame size={18} fill="currentColor" className="text-orange-500" />
+          <span className="font-bold">{stats.streak} dias</span>
+        </div>
       </header>
 
-      {/* Widget Spaced Repetition / Insight do Dia */}
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-secondary" />
-          <h2 className="text-lg font-semibold font-serif text-secondary">Insight do Dia</h2>
-        </div>
-        <Card className="bg-secondary/5 border-secondary/20 shadow-none">
-          <CardContent className="p-4 relative">
-            <span className="text-4xl absolute -top-1 -left-1 text-secondary/10 font-serif">"</span>
-            <p className="text-slate-700 italic font-serif leading-relaxed px-4 pt-2 text-sm">
-              {insight ? insight.text : "A jornada central reflete a ideia do Panteísmo: de que a Alma do Mundo se nutre de nossa felicidade ou miséria."}
-            </p>
-            <div className="flex justify-between items-end mt-4">
-              <span className="text-[10px] text-slate-400 font-medium uppercase font-sans">
-                {insight?.book || 'O Alquimista'}
-              </span>
-              <Badge variant="secondary" className="text-[10px] font-sans">Spaced Repetition</Badge>
+      {/* Spaced Repetition Card */}
+      {stats.spacedRepPending ? (
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setShowSpacedRep(true)}
+          className="w-full bg-secondary text-white rounded-2xl p-5 flex items-center justify-between shadow-lg shadow-secondary/20 border border-secondary"
+        >
+          <div className="flex items-center gap-4 text-left">
+            <div className="bg-white/20 p-3 rounded-full">
+              <Brain size={24} className="text-white" />
             </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Leitura Atual */}
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <BookOpen className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold font-serif text-primary">Leitura Atual</h2>
-        </div>
-        <Card className="overflow-hidden">
-          <div className="flex h-36 border-b border-slate-100">
-            <BookCover title={currentRead?.title || ''} isbn={currentRead?.isbn} size="L" className="w-24 border-0 rounded-none shadow-none" />
-            <div className="flex flex-col flex-1 p-4 justify-between">
-              <div>
-                <CardTitle className="text-xl mb-1 line-clamp-2">{currentRead?.title}</CardTitle>
-                <CardDescription className="line-clamp-1">{currentRead?.author}</CardDescription>
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-slate-500 font-medium">
-                  <span>Progresso Geral</span>
-                  <span>{bookProgress}%</span>
-                </div>
-                <Progress value={bookProgress} />
-              </div>
+            <div>
+              <h3 className="font-serif font-bold text-lg leading-tight">Review Diária Pendente</h3>
+              <p className="text-secondary-100 text-sm opacity-90">2 flashcards de suas leituras</p>
             </div>
           </div>
-          <CardContent className="p-4 bg-slate-50 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Meta Diária</p>
-              <p className="text-xs text-slate-500 mt-1">{pagesReadDaily} de {pagesGoalDaily} páginas</p>
-            </div>
-            
-            {/* Circular Progress Gamificado */}
-            <div className="relative w-12 h-12">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-200" />
-                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" 
-                        strokeDasharray={125.6} strokeDashoffset={125.6 - (125.6 * dailyProgress) / 100}
-                        className="text-accent transition-all duration-1000 ease-out" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-700">
-                {Math.round(dailyProgress)}%
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <ArrowRight size={20} className="text-white/80" />
+        </motion.button>
+      ) : (
+        <div className="w-full bg-slate-50 text-slate-500 rounded-2xl p-4 flex items-center gap-3 border border-slate-100">
+          <div className="bg-green-100 p-2 rounded-full text-green-600">
+            <Brain size={20} />
+          </div>
+          <p className="font-medium text-sm">Review diária concluída! Retenção em {stats.spacedRepRetention}%.</p>
+        </div>
+      )}
+
+      {/* Current Reading */}
+      {currentBook && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-serif font-bold text-slate-800 flex items-center gap-2">
+            Continuar Lendo
+          </h2>
+          <BookProgressCard book={currentBook} />
+        </section>
+      )}
+
+      {/* Pending Discussion */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xl font-serif font-bold text-slate-800">Discussão Pendente</h2>
+        <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-start gap-4 cursor-pointer hover:border-primary/50 transition">
+          <div className="bg-blue-50 text-primary p-3 rounded-full mt-1">
+            <MessageCircle size={20} />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-bold text-slate-800 text-sm">Reflexão sobre A Coragem de Ser Imperfeito</h4>
+            <p className="text-xs text-slate-500 mt-1 line-clamp-2">"Você mencionou o conceito de armadura, como você acha que isso se aplica no seu dia a dia?"</p>
+          </div>
+          <span className="text-xs font-semibold text-primary bg-blue-50 px-2 py-1 rounded">Nova</span>
+        </div>
       </section>
 
+      {/* Next Suggestion */}
+      {suggestedBook && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-serif font-bold text-slate-800">Próxima Sugestão</h2>
+          <BookCard book={suggestedBook} className="!flex-row" featured />
+        </section>
+      )}
+
     </div>
-  )
+  );
 }
